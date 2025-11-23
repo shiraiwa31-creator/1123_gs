@@ -29,124 +29,126 @@
     <button id="startBtn">スタート</button>
   </div>
 
-  <script>
-    const gridEl   = document.getElementById("grid");
-    const msgEl    = document.getElementById("message");
-    const levelEl  = document.getElementById("level");
-    const clearsEl = document.getElementById("clears");
-    const timeEl   = document.getElementById("time");
-    const startBtn = document.getElementById("startBtn");
-    const gameEl   = document.getElementById("game");
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
 
-    const normalFace = "😉"; 
-    const oddFace    = "😊"; // 正解
+const normalFace = "😉"; 
+const oddFace    = "😊";
 
-    let oddIndex = -1;
-    let level = 1;
-    let clears = 0;
-    let timeLeft = 30;
-    let timerId = null;
-    let gameActive = false;
+let oddIndex = -1;
+let level = 1;
+let clears = 0;
+let timeLeft = 30;
+let timerId = null;
+let gameActive = false;
 
-    function getGridSizeFromLevel(lv) {
-      if (lv === 1) return 3 * 3;   // 9マス
-      if (lv === 2) return 4 * 4;   // 16マス
-      return 5 * 5;                 // 25マス（lv3以降）
+// 要素キャッシュ
+const $grid   = $("#grid");
+const $msg    = $("#message");
+const $level  = $("#level");
+const $clears = $("#clears");
+const $time   = $("#time");
+const $start  = $("#startBtn");
+const $game   = $("#game");
+
+function getGridSizeFromLevel(lv) {
+  if (lv === 1) return 3 * 3;   // 9
+  if (lv === 2) return 4 * 4;   // 16
+  return 5 * 5;                 // 25
+}
+
+function applyGridLayout(gridCount) {
+  const side = Math.sqrt(gridCount);
+  $grid.css("grid-template-columns", `repeat(${side}, 1fr)`);
+}
+
+function setupGame() {
+  const cellCount = getGridSizeFromLevel(level);
+  applyGridLayout(cellCount);
+
+  $grid.html("");
+  $msg.text("");
+
+  oddIndex = Math.floor(Math.random() * cellCount);
+
+  for (let i = 0; i < cellCount; i++) {
+    const face = (i === oddIndex) ? oddFace : normalFace;
+    const $cell = $(`
+      <div class="cell" data-index="${i}">
+        ${face}
+      </div>
+    `);
+
+    // クリックイベント（jQuery版）
+    $cell.on("click", function () {
+      onCellClick($(this));
+    });
+
+    $grid.append($cell);
+  }
+}
+
+function onCellClick($cell) {
+  if (!gameActive) return;
+
+  const index = Number($cell.data("index"));
+
+  if (index === oddIndex) {
+    // 正解
+    clears++;
+    level++;
+    $clears.text(clears);
+    $level.text(level);
+    setupGame(); 
+  } else {
+    shakeScreen();
+  }
+}
+
+function shakeScreen() {
+  $game.removeClass("shake");
+  void $game[0].offsetWidth; // DOMリフロー
+  $game.addClass("shake");
+}
+
+function startTimer() {
+  timeLeft = 30;
+  $time.text(timeLeft);
+
+  if (timerId) clearInterval(timerId);
+
+  timerId = setInterval(() => {
+    timeLeft--;
+    $time.text(timeLeft);
+
+    if (timeLeft <= 0) {
+      clearInterval(timerId);
+      gameActive = false;
+      $msg.text(`おめでとう！ ${clears}回達成`);
+      $start.prop("disabled", false).text("もう一度");
     }
+  }, 1000);
+}
 
-    function applyGridLayout(gridCount) {
-      const side = Math.sqrt(gridCount);
-      gridEl.style.gridTemplateColumns = `repeat(${side}, 1fr)`;
-    }
+function startGame() {
+  level = 1;
+  clears = 0;
+  $level.text(level);
+  $clears.text(clears);
+  $msg.text("");
 
-    function setupGame() {
-      const cellCount = getGridSizeFromLevel(level);
-      applyGridLayout(cellCount);
+  gameActive = true;
+  $start.prop("disabled", true);
 
-      gridEl.innerHTML = "";
-      msgEl.textContent = "";
+  setupGame();
+  startTimer();
+}
 
-      oddIndex = Math.floor(Math.random() * cellCount);
+// スタートボタン
+$start.on("click", startGame);
 
-      for (let i = 0; i < cellCount; i++) {
-        const cell = document.createElement("div");
-        cell.className = "cell";
-        cell.dataset.index = i;
+setupGame();
 
-        if (i === oddIndex) {
-          cell.textContent = oddFace;
-        } else {
-          cell.textContent = normalFace;
-        }
-
-        cell.addEventListener("click", onCellClick);
-        gridEl.appendChild(cell);
-      }
-    }
-
-    function onCellClick(e) {
-      if (!gameActive) return; // ゲーム中以外は反応しない
-
-      const index = Number(e.currentTarget.dataset.index);
-
-      if (index === oddIndex) {
-        // 正解
-        clears++;
-        level++;
-        clearsEl.textContent = clears;
-        levelEl.textContent = level;
-        setupGame(); // 次のレベルへ
-      } else {
-        // 不正解 → テキストは変えず、画面を左右に揺らす
-        shakeScreen();
-      }
-    }
-
-    function shakeScreen() {
-      gameEl.classList.remove("shake"); 
-      void gameEl.offsetWidth; // リフロー
-      gameEl.classList.add("shake");
-    }
-
-    function startTimer() {
-      timeLeft = 30;
-      timeEl.textContent = timeLeft;
-
-      if (timerId) clearInterval(timerId);
-
-      timerId = setInterval(() => {
-        timeLeft--;
-        timeEl.textContent = timeLeft;
-
-        if (timeLeft <= 0) {
-          clearInterval(timerId);
-          gameActive = false;
-          msgEl.textContent = `おめでとう！ ${clears}回達成`;
-          startBtn.disabled = false;
-          startBtn.textContent = "もう一度";
-        }
-      }, 1000);
-    }
-
-    function startGame() {
-      // リセット
-      level = 1;
-      clears = 0;
-      levelEl.textContent = level;
-      clearsEl.textContent = clears;
-      msgEl.textContent = "";
-
-      gameActive = true;
-      startBtn.disabled = true;
-
-      setupGame();
-      startTimer();
-    }
-
-    startBtn.addEventListener("click", startGame);
-
-    // 初期状態（とりあえずレベル1の盤面だけ表示）
-    setupGame();
-  </script>
+</script>
 </body>
 </html>
