@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>janken-shinka</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+      <div id="game">
+    <h1>間違い探し</h1>
+    <div class="info">
+      同じ顔が並ぶ中に、1つだけ違う顔があるよ。<br>
+      30秒以内にできるだけたくさん当ててね！
+    </div>
+
+    
+    <div class="status">
+      <div>レベル：<span id="level">1</span></div>
+      <div>クリア：<span id="clears">0</span> 回</div>
+      <div>残り：<span id="time">30</span> 秒</div>
+    </div>
+
+    <div class="board">
+    <div class="grid" id="grid"></div>
+    </div>
+    <div id="message"></div>
+
+    <button id="startBtn">スタート</button>
+  </div>
+
+  <script>
+    const gridEl   = document.getElementById("grid");
+    const msgEl    = document.getElementById("message");
+    const levelEl  = document.getElementById("level");
+    const clearsEl = document.getElementById("clears");
+    const timeEl   = document.getElementById("time");
+    const startBtn = document.getElementById("startBtn");
+    const gameEl   = document.getElementById("game");
+
+    const normalFace = "😉"; 
+    const oddFace    = "😊"; // 正解
+
+    let oddIndex = -1;
+    let level = 1;
+    let clears = 0;
+    let timeLeft = 30;
+    let timerId = null;
+    let gameActive = false;
+
+    function getGridSizeFromLevel(lv) {
+      if (lv === 1) return 3 * 3;   // 9マス
+      if (lv === 2) return 4 * 4;   // 16マス
+      return 5 * 5;                 // 25マス（lv3以降）
+    }
+
+    function applyGridLayout(gridCount) {
+      const side = Math.sqrt(gridCount);
+      gridEl.style.gridTemplateColumns = `repeat(${side}, 1fr)`;
+    }
+
+    function setupGame() {
+      const cellCount = getGridSizeFromLevel(level);
+      applyGridLayout(cellCount);
+
+      gridEl.innerHTML = "";
+      msgEl.textContent = "";
+
+      oddIndex = Math.floor(Math.random() * cellCount);
+
+      for (let i = 0; i < cellCount; i++) {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        cell.dataset.index = i;
+
+        if (i === oddIndex) {
+          cell.textContent = oddFace;
+        } else {
+          cell.textContent = normalFace;
+        }
+
+        cell.addEventListener("click", onCellClick);
+        gridEl.appendChild(cell);
+      }
+    }
+
+    function onCellClick(e) {
+      if (!gameActive) return; // ゲーム中以外は反応しない
+
+      const index = Number(e.currentTarget.dataset.index);
+
+      if (index === oddIndex) {
+        // 正解
+        clears++;
+        level++;
+        clearsEl.textContent = clears;
+        levelEl.textContent = level;
+        setupGame(); // 次のレベルへ
+      } else {
+        // 不正解 → テキストは変えず、画面を左右に揺らす
+        shakeScreen();
+      }
+    }
+
+    function shakeScreen() {
+      gameEl.classList.remove("shake"); 
+      void gameEl.offsetWidth; // リフロー
+      gameEl.classList.add("shake");
+    }
+
+    function startTimer() {
+      timeLeft = 30;
+      timeEl.textContent = timeLeft;
+
+      if (timerId) clearInterval(timerId);
+
+      timerId = setInterval(() => {
+        timeLeft--;
+        timeEl.textContent = timeLeft;
+
+        if (timeLeft <= 0) {
+          clearInterval(timerId);
+          gameActive = false;
+          msgEl.textContent = `おめでとう！ ${clears}回達成`;
+          startBtn.disabled = false;
+          startBtn.textContent = "もう一度";
+        }
+      }, 1000);
+    }
+
+    function startGame() {
+      // リセット
+      level = 1;
+      clears = 0;
+      levelEl.textContent = level;
+      clearsEl.textContent = clears;
+      msgEl.textContent = "";
+
+      gameActive = true;
+      startBtn.disabled = true;
+
+      setupGame();
+      startTimer();
+    }
+
+    startBtn.addEventListener("click", startGame);
+
+    // 初期状態（とりあえずレベル1の盤面だけ表示）
+    setupGame();
+  </script>
+</body>
+</html>

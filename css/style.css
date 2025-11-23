@@ -1,0 +1,113 @@
+body {
+  text-align: center;
+  background: #f6f6f3;
+  margin: 0;
+  padding: 40px 10px;
+}
+
+h1 {
+  color: #2f4f4f;
+  margin-bottom: 4px;
+}
+
+#game {
+  width: 400px;
+  margin: 20px auto;
+  padding: 20px;
+  border-radius: 16px;
+  background: white;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+  position: relative;
+  overflow: hidden; /* shake で少し動いてもはみ出さないように */
+}
+
+.info {
+  font-size: 14px;
+  color: #2f4f4f;
+  margin-bottom: 10px;
+}
+
+.status {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #2f4f4f;
+  font-weight: 600;
+}
+
+.grid {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+  justify-content: center;
+}
+
+.board {
+  display: flex;
+  justify-content: center;  
+  align-items: center;      
+  margin: 24px 0;         
+}
+
+.cell {
+  width: 70px;
+  height: 70px;
+  border-radius: 24px;
+  border: 2px solid #b2e8cb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  background: #85d1cd;
+  color: #fff;
+  font-size: 34px;
+  user-select: none;
+}
+
+.cell:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+#message {
+  margin-top: 12px;
+  min-height: 1.4em;
+  font-weight: bold;
+  color: #358465;
+}
+
+button {
+  margin-top: 16px;
+  padding: 8px 20px;
+  border-radius: 20px;
+  border: none;
+  background: #2f4f4f;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+button:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+/* 画面が左右に揺れるアニメーション */
+@keyframes shake {
+  0%   { transform: translateX(0); }
+  20%  { transform: translateX(-6px); }
+  40%  { transform: translateX(6px); }
+  60%  { transform: translateX(-4px); }
+  80%  { transform: translateX(4px); }
+  100% { transform: translateX(0); }
+}
+
+.shake {
+  animation: shake 0.3s;
+}
